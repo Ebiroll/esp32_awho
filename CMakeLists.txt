@@ -26,10 +26,11 @@ ${IDF_PATH}/components/tcpip_adapter/include
 ${IDF_PATH}/components/lwip/include
 ${IDF_PATH}/components/lwip/include/lwip/port
 ${IDF_PATH}/components/lwip/include/lwip
-${THIS_PATH}/build/include/
 ${LDF_PATH}/freeRTOS
 ${LDF_PATH}/freeRTOS/freertos
 ${LDF_PATH}/freeRTOS/portable/GCC/Posix
+${LDF_PATH}/components/lwip/port/include/
+${THIS_PATH}/build/include/
 )
 
 SET (LIBRARY_TYPE STATIC)
@@ -100,13 +101,17 @@ ${IDF_PATH}/components/lwip/core/ipv6/ip6_frag.c
 ${IDF_PATH}/components/lwip/core/ipv6/inet6.c   
 ${IDF_PATH}/components/lwip/core/ipv6/mld6.c
 ${IDF_PATH}/components/lwip/api/tcpip.c
-${LDF_PATH}/components/lwip/port/sys_arch.c
+${LDF_PATH}/components/lwip/port/dummy_sys_arch.c
+${LDF_PATH}/components/lwip/port/netif/tapif.c
 )
 
 ADD_EXECUTABLE(awho
 main/awho.c
 ${LWIP_SRC}
 ${LDF_PATH}/main_task.c
+${IDF_PATH}/components/log/log.c
+${IDF_PATH}/components/esp32/event_loop.c
+${IDF_PATH}/components/esp32/event_default_handlers.c
 )
 
 TARGET_LINK_LIBRARIES(awho freertos dummy pthread)
