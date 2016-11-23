@@ -105,7 +105,7 @@ int app_main(void)
 
         level = !level;
 	    printf(".");
-        //vTaskDelay(300 / portTICK_PERIOD_MS);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
     }
 
