@@ -115,6 +115,15 @@ ${IDF_PATH}/components/lwip/core/ipv6/ip6_frag.c
 ${IDF_PATH}/components/lwip/core/ipv6/inet6.c   
 ${IDF_PATH}/components/lwip/core/ipv6/mld6.c
 ${IDF_PATH}/components/lwip/api/tcpip.c
+${IDF_PATH}/components/lwip/api/api_lib.c  
+${IDF_PATH}/components/lwip/api/err.c         
+${IDF_PATH}/components/lwip/api/netbuf.c  
+${IDF_PATH}/components/lwip/api/netifapi.c  
+${IDF_PATH}/components/lwip/api/sockets.c
+${IDF_PATH}/components/lwip/api/api_msg.c  
+${IDF_PATH}/components/lwip/api/lwip_debug.c  
+#${IDF_PATH}/components/lwip/api/netdb.c   
+${IDF_PATH}/components/lwip/api/pppapi.c    
 ${LDF_PATH}/components/lwip/port/dummy_sys_arch.c
 ${LDF_PATH}/components/lwip/port/netif/tapif.c
 ${LDF_PATH}/linux_lwip.c
@@ -122,6 +131,7 @@ ${LDF_PATH}/linux_lwip.c
 
 ADD_EXECUTABLE(awho
 main/awho.c
+main/echo.c
 ${LWIP_SRC}
 ${LDF_PATH}/main_task.c
 ${IDF_PATH}/components/log/log.c
