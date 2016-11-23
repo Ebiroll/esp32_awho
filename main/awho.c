@@ -39,10 +39,10 @@ int app_main(void)
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     wifi_config_t sta_config = {
         .sta = {
-         #include "secret.h"
-	     //.ssid = "ssid",
-	     //.password = "password",
-	     //.bssid_set = false
+	   //#include "secret.h"
+	   .ssid = "ssid",
+	   .password = "password",
+	   .bssid_set = false
         }
     };
     ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );

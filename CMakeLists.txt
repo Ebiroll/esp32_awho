@@ -39,6 +39,7 @@ ADD_LIBRARY(dummy
 ${LDF_PATH}/components/nvs_flash/nvs_flash.c
 ${LDF_PATH}/components/esp32/dummy_esp32.c
 ${LDF_PATH}/components/esp32/dummy_esp_wifi.c
+${LDF_PATH}/components/esp32/dummy_esp_wifi_internal.c
 )
 
 ADD_LIBRARY(freertos
@@ -103,6 +104,7 @@ ${IDF_PATH}/components/lwip/core/ipv6/mld6.c
 ${IDF_PATH}/components/lwip/api/tcpip.c
 ${LDF_PATH}/components/lwip/port/dummy_sys_arch.c
 ${LDF_PATH}/components/lwip/port/netif/tapif.c
+${LDF_PATH}/linux_lwip.c
 )
 
 ADD_EXECUTABLE(awho
