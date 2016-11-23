@@ -3,6 +3,8 @@ PROJECT(linux_esp32)
 #SET (CMAKE_BUILD_TYPE Release)
 SET (CMAKE_BUILD_TYPE Debug)
 
+
+
 enable_testing()
 
 set(IDF_PATH /home/olas/esp/esp-idf)
@@ -12,7 +14,7 @@ set(THIS_PATH /home/olas/esp/esp32_awho)
 ADD_DEFINITIONS(-D TEST )
 
 set(CMAKE_CXX_FLAGS "-g -Wall -std=c++11 -static-libstdc++")
-set(CMAKE_C_FLAGS "-g -std=c99")
+set(CMAKE_C_FLAGS "-g -std=gnu99")
 
 
 INCLUDE_DIRECTORIES(
@@ -23,15 +25,26 @@ ${IDF_PATH}/components/driver/include/
 ${IDF_PATH}/components/log/include/
 ${IDF_PATH}/components/tcpip_adapter/include
 ${IDF_PATH}/components/tcpip_adapter/include
-${IDF_PATH}/components/lwip/include
-${IDF_PATH}/components/lwip/include/lwip/port
+${LDF_PATH}/components/lwip/include
+${LDF_PATH}/components/lwip/include/lwip/port
 ${IDF_PATH}/components/lwip/include/lwip
 ${LDF_PATH}/freeRTOS
 ${LDF_PATH}/freeRTOS/freertos
+${IDF_PATH}/components/lwip/port/include
+${IDF_PATH}/components/lwip/include/lwip
+${IDF_PATH}/components/lwip/include/lwip/port
 ${LDF_PATH}/freeRTOS/portable/GCC/Posix
-${LDF_PATH}/components/lwip/port/include/
 ${THIS_PATH}/build/include/
 )
+
+INCLUDE_DIRECTORIES(BEFORE
+${LDF_PATH}/components/lwip/include
+${LDF_PATH}/components/lwip/include/lwip
+${LDF_PATH}/components/lwip/port/include
+${LDF_PATH}/components/lwip/port
+${LDF_PATH}/components/lwip
+)
+
 
 SET (LIBRARY_TYPE STATIC)
 

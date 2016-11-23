@@ -27,7 +27,7 @@ int app_main(void)
     // To ensure proper MMU setup, not needed
     //cpu_configure_region_protection();
     nvs_flash_init();
-    system_init();
+    //system_init();
     printf("Initiated\n");
 
     tcpip_adapter_init();
@@ -105,7 +105,7 @@ int app_main(void)
 
         level = !level;
 	    printf(".");
-        vTaskDelay(300 / portTICK_PERIOD_MS);
+        //vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
     }
 
