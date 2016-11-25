@@ -125,7 +125,7 @@ ${IDF_PATH}/components/lwip/api/lwip_debug.c
 #${IDF_PATH}/components/lwip/api/netdb.c   
 ${IDF_PATH}/components/lwip/api/pppapi.c    
 ${LDF_PATH}/components/lwip/port/dummy_sys_arch.c
-${LDF_PATH}/components/lwip/port/netif/tunif.c
+${LDF_PATH}/components/lwip/port/netif/tapif.c
 ${LDF_PATH}/linux_lwip.c
 )
 
