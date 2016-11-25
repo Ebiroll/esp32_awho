@@ -72,23 +72,18 @@ int app_main(void)
     struct eth_addr *cachemac;
 
 
-
-    netif=netif_find("wl0");
+    netif=netif_find("en0");
     if (!netif) {
-        printf("No wl0");
-        netif=netif_find("en0");
-        if (!netif) {
-            printf("No en0");
-        }
+        printf("No en0");
     }
 
     unsigned char hostnum=1;
     char tmpBuff[20];
     while (true) {
 
-        sprintf(tmpBuff,"192.168.1.%d",hostnum);
+        sprintf(tmpBuff,"192.168.0.%d",hostnum);
 
-        IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
+        IP4_ADDR(&scanaddr, 192, 168 , 0, hostnum);
 
         struct netif *chacheif=netif;
         for (int j=0;j<ARP_TABLE_SIZE;j++) {
