@@ -1,0 +1,37 @@
+I (1506) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
+Initializing mux 0x3ffc04d4
+check b=0x3ffc1528 size=125640 ok
+check b=0x3ffdfff0 size=0 ok
+check b=0x3ffe800c size=98276 ok
+I (1523) cpu_start: Pro cpu up.
+I (1526) cpu_start: Single core mode
+I (1530) cpu_start: Pro cpu start user code
+I (1546) rtc: rtc v160 Nov 22 2016 19:00:05
+I (1553) rtc: XTAL 26M
+Initializing mux 0x3ffc17cc
+Initializing mux 0x3ffc17cc
+Initializing mux 0x3ffc183c
+Initializing mux 0x3ffc18ac
+Initializing mux 0x3ffc31ac
+Initializing mux 0x3ffc31ac
+I (1564) cpu_start: Starting scheduler on PRO CPU.
+Initializing mux 0x3ffc04fc
+Initializing mux 0x3ffc39a0
+Initializing mux 0x3ffc4198
+Initializing mux 0x3ffc4198
+Initializing mux 0x3ffc4208
+Initializing mux 0x3ffc4208
+Initializing mux 0x3ffc474c
+Initializing mux 0x3ffc474c
+Initializing mux 0x3ffc47bc
+Initializing mux 0x3ffc47bc
+Initiated
+Initializing mux 0x3ffc4988
+Initializing mux 0x3ffc4a78
+Initializing mux 0x3ffc4a78
+tcpip_task_hdlxxx : 3ffc52bc, prio:18,stack:2048
+Initializing mux 0x3ffc5490
+Initializing mux 0x3ffc6518
+I (2093) wifi: frc2_timer_task_hdl:3ffc6dac, prio:22, stack:2048
+I (2115) phy: error: pll_cal exceeds 2ms!!!
+
