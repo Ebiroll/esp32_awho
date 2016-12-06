@@ -551,7 +551,7 @@ static void ethoc_interrupt()
 	// No interrupt to handle....
 	if (unlikely(pending == 0))
 	{
-		//printf("No pendig irq, spurious.\n");
+		printf("No pendig irq, spurious.\n");
 		return;
 	}
 		//return IRQ_NONE;

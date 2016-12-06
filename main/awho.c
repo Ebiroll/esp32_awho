@@ -123,9 +123,9 @@ int app_main(void)
 {
     nvs_flash_init();
     initialise_wifi();
- 
-    //xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 12, NULL);
+    //Task_lwip_init(NULL);
     //xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
+    //xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 12, NULL);
 
  /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
        muxed to GPIO on reset already, but some default to other
