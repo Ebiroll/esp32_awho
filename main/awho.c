@@ -122,6 +122,7 @@ static void initialise_wifi(void)
 int app_main(void)
 {
     nvs_flash_init();
+
     //initialise_wifi();
     Task_lwip_init(NULL);
  
