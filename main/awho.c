@@ -106,9 +106,9 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
-            #include "secret.h"
-            //.ssid = "ssid",
-            //.password = "password",
+	    //#include "secret.h"
+            .ssid = "ssid",
+            .password = "password",
         },
     };
     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
@@ -122,10 +122,12 @@ static void initialise_wifi(void)
 int app_main(void)
 {
     nvs_flash_init();
-    initialise_wifi();
+    //initialise_wifi();
+    Task_lwip_init(NULL);
  
     //xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 12, NULL);
-    //xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
+    // This is not needed with the real wifi task
+    xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
 
  /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
        muxed to GPIO on reset already, but some default to other
@@ -178,15 +180,12 @@ int app_main(void)
             etharp_cleanup_netif(netif); 
             vTaskDelay(800/portTICK_PERIOD_MS);
         }
-            // Periodically call etharp_cleanup_netif 	( 	struct netif *  	netif	) 	
-            // To clean cache
-
 
         gpio_set_level(GPIO_NUM_5, level);
         if (netif)
         {
-	      //printf("ARP request %s\n",tmpBuff);
-          err_t ret=etharp_request(netif, &scanaddr);
+	    //printf("ARP request %s\n",tmpBuff);
+            err_t ret=etharp_request(netif, &scanaddr);
             if (ret<0) {
                 printf("Failed request %s\n",tmpBuff);
             }
