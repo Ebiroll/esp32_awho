@@ -39,6 +39,7 @@ ${THIS_PATH}/build/include/
 
 INCLUDE_DIRECTORIES(BEFORE
 ${LDF_PATH}/components/lwip/include
+${LDF_PATH}/components/ethernet/include
 ${LDF_PATH}/components/lwip/include/lwip
 ${LDF_PATH}/components/lwip/port/include
 ${LDF_PATH}/components/lwip/port
