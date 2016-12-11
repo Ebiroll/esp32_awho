@@ -51,7 +51,7 @@ SemaphoreHandle_t xSemaphore = NULL;
 
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
-#define IFNAME1 't'
+#define IFNAME1 'n'
 
 static char hostname[16];
 
@@ -747,6 +747,7 @@ int ethoc_open(struct netif *dev)
     xSemaphore = xSemaphoreCreateBinary();
 
 
+	//REG_SET_FIELD(DPORT_PRO_EMAC_INT_MAP_REG, DPORT_PRO_EMAC_INT_MAP, ETS_EMAC_INUM);
     intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
     xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
     xt_ints_on(1 << 9);                                   

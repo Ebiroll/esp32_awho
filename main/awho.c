@@ -54,10 +54,32 @@ const int CONNECTED_BIT = BIT0;
 
 static char tag[] = "telnet";
 
+typedef struct {
+    u8_t      hwAddr[6];
+    const char      *name; 
+    bool      status;
+    time_t    enter;
+    time_t    leave; 
+} t_person;
+
+#define MAX_PERSONS  2
+
+// Here we store our list of known persons 
+t_person  people[]= {
+    {{0,1,2,3,4,5},"Olof",false,0,0},
+    {{0,3,2,3,4,5},"Alex",false,0,0}
+};
+
+
 static void recvData(uint8_t *buffer, size_t size) {
 	char responseMessage[100];
 	ESP_LOGD(tag, "We received: %.*s", size, buffer);
-	sprintf(responseMessage, "Thanks for %d bytes of data\n", size);
+	//sprintf(responseMessage, "Thanks for %d bytes of data\n", size);
+    strncpy(responseMessage,(char *)buffer,(int)size);
+    responseMessage[size]=0;
+    telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+
+    sprintf(responseMessage, "%d bytes\n", size);
 	telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
 }
 
@@ -76,6 +98,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         esp_wifi_connect();
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
+        printf("GOT IP\n");
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
         break;
@@ -93,7 +116,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 
 static void initialise_wifi(void)
 {
-   printf("Initiated\n");
+    printf("Initiated\n");
 
 
     tcpip_adapter_init();
@@ -171,7 +194,13 @@ int app_main(void)
         for (int j=0;j<ARP_TABLE_SIZE;j++) {
                     if (1==etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
                     {
+
                         printf("Found %d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
+                        unsigned char *ptr=cachemac->addr;
+                        for (int j=0;j<6;j++) {
+                            printf("%d,",ptr[j]);
+                        }
+                        printf("\n");
                     }
         }
 
@@ -185,7 +214,7 @@ int app_main(void)
         gpio_set_level(GPIO_NUM_5, level);
         if (netif)
         {
-	    //printf("ARP request %s\n",tmpBuff);
+	        printf("ARP request %s\n",tmpBuff);
             err_t ret=etharp_request(netif, &scanaddr);
             if (ret<0) {
                 printf("Failed request %s\n",tmpBuff);
