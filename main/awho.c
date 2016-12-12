@@ -72,15 +72,62 @@ t_person  people[]= {
 
 
 static void recvData(uint8_t *buffer, size_t size) {
-	char responseMessage[100];
+	char responseMessage[256];
 	ESP_LOGD(tag, "We received: %.*s", size, buffer);
-	//sprintf(responseMessage, "Thanks for %d bytes of data\n", size);
-    strncpy(responseMessage,(char *)buffer,(int)size);
-    responseMessage[size]=0;
-    telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+    printf("got %d data\n",size);
+    //strncpy(responseMessage,(char *)buffer,(int)size);
+    //responseMessage[size]=0;
+    //telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+    struct netif *mynetif;
+    mynetif=netif_find("en0");
+    if (!mynetif) {
+        printf(responseMessage,"No interface en0 found\n");
+        sprintf(responseMessage,"No interface en0 found\n");
+        telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+        responseMessage[0] = 0;
+    }
 
-    sprintf(responseMessage, "%d bytes\n", size);
-	telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+    if (size <= 2)
+    {
+       ip4_addr_t scanaddr;
+       ip4_addr_t *cacheaddr;
+       struct eth_addr *cachemac=NULL;
+       printf("send cache\n");
+
+       struct netif *chacheif = mynetif;
+       for (int j = 0; j < ARP_TABLE_SIZE; j++)
+       {
+           if (1 == etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
+           {
+
+               sprintf(responseMessage, "Found %d  %d.%d.%d.%d\n", j, IP2STR(cacheaddr));
+               telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+               responseMessage[0] = 0;
+
+               unsigned char *ptr = (unsigned char *)&(cachemac->addr);
+               char Buff[128];
+               for (int j = 0; j < 6; j++)
+               {
+                   sprintf(Buff, "%d,", *ptr);
+                   strcat(responseMessage, Buff);
+                   ptr++;
+               }
+               strcat(responseMessage, "\n");
+               telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+           }
+       }
+    }
+    if (strcmp((const char *)buffer,"help")==0) {
+        sprintf(responseMessage,"clear/ret clear - clears arp cache. Press return to see clients\n");
+        telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+    }
+    if (strcmp((const char *)buffer,"clear")==0) {
+        sprintf(responseMessage,"clearing arp cache\n");
+        telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+ 
+        etharp_cleanup_netif(mynetif); 
+    }
+
 }
 
 static void telnetTask(void *data) {
@@ -90,6 +137,7 @@ static void telnetTask(void *data) {
 	vTaskDelete(NULL);
 }
 
+bool ip_received=false;
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -98,7 +146,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         esp_wifi_connect();
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
+        //tcpip_adapter_ip_info_t ip=;
         printf("GOT IP\n");
+        printf(IPSTR"\n", IP2STR(&event->event_info.got_ip.ip_info.ip)); 
+        ip_received=true;       
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
         break;
@@ -129,7 +180,7 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
-	    //#include "secret.h"
+	        //#include "secret.h"
             .ssid = "ssid",
             .password = "password",
         },
@@ -146,12 +197,12 @@ int app_main(void)
 {
     nvs_flash_init();
 
-    //initialise_wifi();
-    Task_lwip_init(NULL);
+    initialise_wifi();
+    //Task_lwip_init(NULL);
  
     //xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 12, NULL);
     // This is not needed with the real wifi task
-    xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
+    //xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 5, NULL, 0);
 
  /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
        muxed to GPIO on reset already, but some default to other
@@ -175,7 +226,7 @@ int app_main(void)
 
     ip4_addr_t scanaddr;
     ip4_addr_t *cacheaddr;
-    struct eth_addr *cachemac;
+    struct eth_addr *cachemac=NULL;
 
     netif=netif_find("en0");
     if (!netif) {
@@ -191,37 +242,42 @@ int app_main(void)
         IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
 
         struct netif *chacheif=netif;
-        for (int j=0;j<ARP_TABLE_SIZE;j++) {
-                    if (1==etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
-                    {
+        //for (int j=0;j<ARP_TABLE_SIZE;j++) {
+        //            if (1==etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
+        //            {
 
-                        printf("Found %d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
-                        unsigned char *ptr=cachemac->addr;
-                        for (int j=0;j<6;j++) {
-                            printf("%d,",ptr[j]);
-                        }
-                        printf("\n");
-                    }
-        }
+        //                printf("Found %d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
+        //                unsigned char *ptr=(unsigned char *)&(cachemac->addr);
+        //                for (int j=0;j<6;j++) {
+        //                    printf("%d,",*ptr);
+        //                    ptr++;
+        //                }
+        //                printf("\n");
+        //            }
+        //}
 
+        //if (hostnum==255) {
+        //    // Clear arp cache
+        //    printf("clean arp cache\n");
+        //    etharp_cleanup_netif(netif); 
+        //    vTaskDelay(800/portTICK_PERIOD_MS);
+        //}
         if (hostnum==255) {
-            // Clear arp cache
-            printf("clean arp cache\n");
-            etharp_cleanup_netif(netif); 
-            vTaskDelay(800/portTICK_PERIOD_MS);
+            hostnum=0;
         }
 
         gpio_set_level(GPIO_NUM_5, level);
-        if (netif)
-        {
-	        printf("ARP request %s\n",tmpBuff);
-            err_t ret=etharp_request(netif, &scanaddr);
-            if (ret<0) {
-                printf("Failed request %s\n",tmpBuff);
+        if (ip_received) {
+            if (netif)
+            {
+                //printf("ARP request %s\n",tmpBuff);
+                err_t ret=etharp_request(netif, &scanaddr);
+                if (ret<0) {
+                    printf("Failed request %s\n",tmpBuff);
+                }
             }
         }
-
-        level = !level;
+        if (ip_received) level = !level;
         vTaskDelay(100/portTICK_PERIOD_MS);
         hostnum++;
     }

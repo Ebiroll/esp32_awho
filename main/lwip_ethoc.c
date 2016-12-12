@@ -363,7 +363,7 @@ static int ethoc_rx(struct netif *dev, int limit)
 			if (bd.stat & RX_BD_EMPTY) {
 			}
 			else {
-                printf("rx_data in %d entry %d\n",count,entry);	
+                //printf("rx_data in %d entry %d\n",count,entry);	
 				//entry=count;
 				//bd.stat &= ~RX_BD_STATS;
 				//bd.stat |=  RX_BD_EMPTY;
@@ -561,7 +561,7 @@ static void ethoc_interrupt()
 		printf("No pendig irq, spurious.\n");
 		return;
 	}
-    printf("IRQ\n");
+    //printf("IRQ\n");
 
 	ethoc_ack_irq(priv, pending);
 
@@ -571,8 +571,9 @@ static void ethoc_interrupt()
 		//dev->stats.rx_dropped++;
 	}
 
-	/* Handle receive/transmit event by switching to polling */
-	if (pending & (INT_MASK_TX | INT_MASK_RX)) {
+	/* Handle receive/transmit event by switching to polling */ 
+	// INT_MASK_TX 
+	if (pending & ( INT_MASK_RX)) {
 		//ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
 		//napi_schedule(&priv->napi);
 		//xTaskResumeFromISR(pollHandle);
