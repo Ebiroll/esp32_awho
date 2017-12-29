@@ -11,7 +11,7 @@ set(IDF_PATH /home/olof/esp/esp-idf)
 set(LDF_PATH /home/olof/esp/linux_esp32)
 set(THIS_PATH /home/olof/esp/esp32_awho)
 
-ADD_DEFINITIONS(-D TEST -D LWIP_NOASSERT -D DNS_FALLBACK_SERVER_INDEX=1 -DCONFIG_IP_LOST_TIMER_INTERVAL=0 -D LWIP_COMPAT_SOCKETS=2 )
+ADD_DEFINITIONS(-D TEST -D LWIP_NOASSERT -D DNS_FALLBACK_SERVER_INDEX=1 -DCONFIG_IP_LOST_TIMER_INTERVAL=0 -D LWIP_COMPAT_SOCKETS=2)
 
 set(CMAKE_CXX_FLAGS "-g -Wall -std=c++11 -static-libstdc++")
 set(CMAKE_C_FLAGS "-g -std=gnu99")
@@ -41,12 +41,10 @@ ${IDF_PATH}/components/lwip/include/lwip/port
 ${LDF_PATH}/freeRTOS/portable/GCC/Posix
 ${THIS_PATH}/build/include/
 ${THIS_PATH}/main/
-${THIS_PATH}/components/libtelnet/include
 )
 
 INCLUDE_DIRECTORIES(BEFORE
 ${LDF_PATH}/components/lwip/include
-${LDF_PATH}/components/ethernet/include
 ${LDF_PATH}/components/lwip/include/lwip
 ${LDF_PATH}/components/lwip/port/include
 ${LDF_PATH}/components/lwip/port
@@ -142,12 +140,7 @@ ${LDF_PATH}/linux_lwip.c
 )
 
 ADD_EXECUTABLE(linux_main
-#${THIS_PATH}/main/main.c
 ${THIS_PATH}/main/awho.c
-${THIS_PATH}/main/echo.c
-#${THIS_PATH}/main/emulwIP.c
-#${THIS_PATH}/main/lwip_ethoc.c
-${THIS_PATH}/main/telnet.c
 ${LWIP_SRC}
 ${LDF_PATH}/main_task.c
 ${IDF_PATH}/components/log/log.c
