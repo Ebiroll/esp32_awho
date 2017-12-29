@@ -21,6 +21,8 @@
 #include "lwip/netif.h"
 #include "netif/etharp.h"
 #include "lwip/tcpip.h"
+#include "esp_event.h"
+
 
 
 #include "port/arch/sys_arch.h"
@@ -82,7 +84,16 @@ void Task_lwip_init(void * pParam)
   netif_add(&ethoc_if, &ipaddr, &netmask, &gw, NULL, ethoc_init, tcpip_input);
   netif_set_default(&ethoc_if);
   netif_set_up(&ethoc_if); 
-  
+
+  tcpip_adapter_ip_info_t tmp;
+  tmp.ip.addr=ipaddr.addr;
+
+  // Emulate a get ip event,  queue.c:721 (xQueueGenericSend)- assert failed!
+  //system_event_t evt;
+  //evt.event_id = SYSTEM_EVENT_STA_GOT_IP;
+  //memcpy(&evt.event_info.got_ip.ip_info, &tmp, sizeof(tcpip_adapter_ip_info_t));
+  //esp_event_send(&evt);
+
   printf("Applications started.\n");
   
   //---------------------------------------------------------------------

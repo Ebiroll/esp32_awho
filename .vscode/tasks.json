@@ -3,7 +3,7 @@
     "command": "make",
     "isShellCommand": true,
     "options": {
-        "cwd": "${workspaceRoot}/cbuild"
+        "cwd": "${workspaceRoot}"
     },
     "tasks": [
         {
