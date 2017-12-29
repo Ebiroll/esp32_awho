@@ -3,7 +3,6 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
@@ -11,6 +10,8 @@
 #include "nvs_flash.h"
 #include "driver/gpio.h"
 
+#define TickType_t uint32_t 
+#include "freertos/event_groups.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
@@ -78,11 +79,12 @@ static void recvData(uint8_t *buffer, size_t size) {
     //strncpy(responseMessage,(char *)buffer,(int)size);
     //responseMessage[size]=0;
     //telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
+
     struct netif *mynetif;
-    mynetif=netif_find("en0");
+    mynetif=netif_find("st1");
     if (!mynetif) {
-        printf(responseMessage,"No interface en0 found\n");
-        sprintf(responseMessage,"No interface en0 found\n");
+        printf(responseMessage,"No interface st1 found\n");
+        sprintf(responseMessage,"No interface st1 found\n");
         telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
         responseMessage[0] = 0;
     }
@@ -117,11 +119,11 @@ static void recvData(uint8_t *buffer, size_t size) {
            }
        }
     }
-    if (strcmp((const char *)buffer,"help")==0) {
+    if (strncmp((const char *)buffer,"help",4)==0) {
         sprintf(responseMessage,"clear/ret clear - clears arp cache. Press return to see clients\n");
         telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
     }
-    if (strcmp((const char *)buffer,"clear")==0) {
+    if (strncmp((const char *)buffer,"clear",5)==0) {
         sprintf(responseMessage,"clearing arp cache\n");
         telnet_esp32_sendData((uint8_t *)responseMessage, strlen(responseMessage));
  
@@ -181,8 +183,8 @@ static void initialise_wifi(void)
     wifi_config_t wifi_config = {
         .sta = {
 	        //#include "secret.h"
-            .ssid = "ssid",
-            .password = "password",
+	      .ssid = "ssid",
+          .password = "password",
         },
     };
     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
@@ -201,9 +203,7 @@ int app_main(void)
 
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
-
         Task_lwip_init(NULL); 
-
     } else {
         initialise_wifi();
     }
@@ -219,11 +219,13 @@ int app_main(void)
        Technical Reference for a list of pads and their default
        functions.)
     */
-    gpio_pad_select_gpio(GPIO_NUM_5);
+    gpio_pad_select_gpio(GPIO_NUM_4);
 
-    gpio_set_direction(GPIO_NUM_5, GPIO_MODE_OUTPUT);
+    gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
     int level = 0;
     // Send arp request
+
+    vTaskDelay(5000/portTICK_PERIOD_MS);
 
     struct netif *netif;
 
@@ -237,9 +239,9 @@ int app_main(void)
     ip4_addr_t *cacheaddr;
     struct eth_addr *cachemac=NULL;
 
-    netif=netif_find("en0");
+    netif=netif_find("st1");
     if (!netif) {
-        printf("No en0");
+        printf("No st1");
     }
 
     unsigned char hostnum=1;
@@ -275,7 +277,7 @@ int app_main(void)
             hostnum=0;
         }
 
-        gpio_set_level(GPIO_NUM_5, level);
+        gpio_set_level(GPIO_NUM_4, level);
         if (ip_received) {
             if (netif)
             {
