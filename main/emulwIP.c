@@ -16,16 +16,19 @@
 #include "lwip/mem.h"
 #include "lwip/pbuf.h"
 #include "lwip/sys.h"
-#include "lwip/timers.h"
+#include "lwip/timeouts.h"
+//#include "lwip/timers.h"
 #include <lwip/stats.h>
 #include "lwip/netif.h"
 #include "netif/etharp.h"
 #include "lwip/tcpip.h"
+#include "lwip/init.h"
 #include "esp_event.h"
+#include "esp_event_loop.h"
 
 
 
-#include "port/arch/sys_arch.h"
+//#include "port/arch/sys_arch.h"
 // -- Generic network interface --
 
 extern err_t ethoc_init(struct netif *netif);

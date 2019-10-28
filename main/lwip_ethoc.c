@@ -28,12 +28,14 @@
 #include "lwip/mem.h"
 #include "lwip/pbuf.h"
 #include "lwip/sys.h"
-#include "lwip/timers.h"
+//#include "lwip/timers.h"
+#include "lwip/timeouts.h"
 #include <lwip/stats.h>
 #include "netif/etharp.h"
 #include <string.h>
 #include "rom/ets_sys.h"
 #include "esp_intr.h"
+#include "freertos/FreeRTOS.h"
 #include "freertos/xtensa_api.h"
 #include "freertos/portmacro.h"
 #include "netif/etharp.h"
@@ -68,7 +70,7 @@ struct netif *ethoc_if_netif;
 static void low_level_init(struct netif * netif);
 static void arp_timer(void *arg);
 
-static err_t low_level_output(struct netif * netif,struct pbuf *p);
+static err_t ethoc_low_level_output(struct netif * netif,struct pbuf *p);
 static struct pbuf * low_level_input(struct netif *netif);
 
 static portMUX_TYPE lock_xmit_spinlock = portMUX_INITIALIZER_UNLOCKED;
@@ -413,12 +415,14 @@ static int ethoc_rx(struct netif *dev, int limit)
 					//printf("trace_open_eth_receive_desc(%x,%x)\n",(unsigned int)src, size);
 
 					ethhdr = (struct eth_hdr *)src;
-    //printf("ethernet_driver: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
-    // (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
-    // (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
-    // (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
-    // (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
-    // (unsigned)htons(ethhdr->type));
+#if 0
+    printf("ethernet_driver: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
+     (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
+     (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
+     (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
+     (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
+     (unsigned)htons(ethhdr->type));
+#endif
 
 
 
@@ -542,6 +546,7 @@ static void ethoc_interrupt()
 	u32 pending;
 	u32 mask;
 
+    static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	/* Figure out what triggered the interrupt...
 	 * The tricky bit here is that the interrupt source bits get
 	 * set in INT_SOURCE for an event regardless of whether that
@@ -577,8 +582,12 @@ static void ethoc_interrupt()
 		//ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
 		//napi_schedule(&priv->napi);
 		//xTaskResumeFromISR(pollHandle);
-		//static signed BaseType_t xHigherPriorityTaskWoken;
-		xSemaphoreGiveFromISR( xSemaphore, NULL );
+		ethoc_ack_irq(priv, INT_MASK_ALL);		
+		xSemaphoreGiveFromISR( xSemaphore, &xHigherPriorityTaskWoken );
+
+        if( xHigherPriorityTaskWoken) {
+            portYIELD_FROM_ISR(); // this wakes up sample_timer_task immediately
+        }
 	}
 
 	return;
@@ -747,11 +756,10 @@ int ethoc_open(struct netif *dev)
     // Cant get this to work with qemu
     xSemaphore = xSemaphoreCreateBinary();
 
-
-	//REG_SET_FIELD(DPORT_PRO_EMAC_INT_MAP_REG, DPORT_PRO_EMAC_INT_MAP, ETS_EMAC_INUM);
-    intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
-    xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
-    xt_ints_on(1 << 9);                                   
+//REG_SET_FIELD(DPORT_PRO_EMAC_INT_MAP_REG, DPORT_PRO_EMAC_INT_MAP, ETS_EMAC_INUM);
+    //intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
+    //xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
+    //xt_ints_on(1 << 9);                                   
 
    //ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
    //		dev->name, dev);
@@ -788,8 +796,28 @@ int ethoc_open(struct netif *dev)
 }
 
 
+uint32_t crc32_for_byte(uint32_t r) {
+  for(int j = 0; j < 8; ++j)
+    r = (r & 1? 0: (uint32_t)0xEDB88320L) ^ r >> 1;
+  return r ^ (uint32_t) 0xFF000000L;
+}
 
-unsigned char packet[ETHOC_BUFSIZ];
+static uint32_t table[0x100];
+static bool table_init=false;
+
+void crc32(const void *data, size_t n_bytes, uint32_t* crc) {
+  if(!table_init) {
+    for(size_t i = 0; i < 0x100; ++i)
+      table[i] = crc32_for_byte(i);
+
+    table_init=true;
+   }
+
+  for(size_t i = 0; i < n_bytes; ++i)
+    *crc = table[(uint8_t)*crc ^ ((uint8_t*)data)[i]] ^ *crc >> 8;
+}
+
+unsigned char packet[ETHOC_BUFSIZ+40];
 
 static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 {
@@ -811,11 +839,19 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	}
 
 	if (skb->len<ETHOC_ZLEN) {
-		u16_t crc=lwip_standard_chksum(packet,skb->len);
+		//u16_t crc=lwip_standard_chksum(packet,ETHOC_ZLEN);  // skb->len
 		// TODO, qemu does not use the TX_BD_PAD bit..
-		//printf("<%x>",crc); , does not work.
-		packet[skb->len+1]= crc & 0xff;
-		packet[skb->len+2]= (crc & 0xff00) << 8 ;
+		uint32_t crc=0;
+        crc32(packet,ETHOC_ZLEN-4,&crc);
+	 
+		//printf("<%x>",crc); //, does not work.
+
+		if (skb->len<ETHOC_ZLEN-4) {
+			packet[ETHOC_ZLEN-1]= (crc & 0xff000000) >> 24;
+			packet[ETHOC_ZLEN-2]= (crc & 0xff0000) >> 16;
+			packet[ETHOC_ZLEN-3]= (crc & 0xff00) >> 8;
+			packet[ETHOC_ZLEN-4]= crc & 0xff ;
+		}
 
 		len=ETHOC_ZLEN;
 	}
@@ -1307,7 +1343,7 @@ err_t ethoc_init(struct netif *netif)
   netif->name[0] = IFNAME0;
   netif->name[1] = IFNAME1;
   netif->output = ethoc_output;
-  netif->linkoutput = low_level_output;
+  netif->linkoutput = ethoc_low_level_output;
 
   sprintf(hostname, "esp_qemu");
   netif->hostname = hostname;
@@ -1366,9 +1402,9 @@ static void low_level_init(struct netif * netif)
     //static void IRAM_ATTR frc_timer_isr()
 	// Interrupt source not important for qemu
 
-	intr_matrix_set(xPortGetCoreID(), ETS_RWBT_INTR_SOURCE, 8);
-    xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
-    xt_ints_on(1 << 8);                     
+	//intr_matrix_set(xPortGetCoreID(), ETS_RWBT_INTR_SOURCE, 8);
+    //xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
+    //xt_ints_on(1 << 8);                     
 	
 	// memcpy 0x3FFE_8000~0x3FFE_FFFF to 
 	// 0x4000_0000  0x4000_7FFF
@@ -1394,7 +1430,8 @@ static void low_level_init(struct netif * netif)
  * might be chained.
  *
  */
-static err_t low_level_output(struct netif * netif, struct pbuf *p)
+//err_t ethoc_low_level_output(struct netif * netif,struct pbuf *p);
+static err_t ethoc_low_level_output(struct netif * netif, struct pbuf *p)
 {
 	struct pbuf *q;
 	u16_t Count;  // packetLength
