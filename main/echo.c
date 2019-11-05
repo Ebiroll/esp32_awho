@@ -119,10 +119,18 @@ void echo_application_thread(void *pvParameters)
 	address.sin_port = htons(echo_port);
 	address.sin_addr.s_addr = INADDR_ANY;
 
+    printf("echo bind\n");
+
 	if (bind(sock, (struct sockaddr *)&address, sizeof (address)) < 0)
 		return;
 
+    printf("echo listen\n");
+
+
 	listen(sock, 0);
+
+    printf("Return from listen\n");
+
 
 	size = sizeof(remote);
         echo_param1->StatSem = pvParameters;
@@ -133,5 +141,8 @@ void echo_application_thread(void *pvParameters)
                         echo_param1->new_sd = new_sd;
 			sys_thread_new("echo connexion", process_echo_request,(void*)echo_param1,2*THREAD_STACKSIZE,DEFAULT_THREAD_PRIO);
 		}
+
+        printf("accept loop\n");
+
 	}
 }

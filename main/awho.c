@@ -245,6 +245,16 @@ int app_main(void)
         printf("No st1");
     }
 
+    // Emulated qemu interface
+    if (*quemu_test==0x42) {
+        netif=netif_find("en1");
+        if (!netif) {
+            printf("No en1");
+        } else {
+            ip_received=true;
+        }
+    }
+
     unsigned char hostnum=1;
     char tmpBuff[20];
     while (true) {
@@ -282,7 +292,7 @@ int app_main(void)
         if (ip_received) {
             if (netif)
             {
-                //printf("ARP request %s\n",tmpBuff);
+                printf("ARP request %s\n",tmpBuff);
                 err_t ret=etharp_request(netif, &scanaddr);
                 if (ret<0) {
                     printf("Failed request %s\n",tmpBuff);
