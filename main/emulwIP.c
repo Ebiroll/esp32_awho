@@ -47,6 +47,7 @@ void Task_lwip_init(void * pParam)
   ip4_addr_t ipaddr, netmask, gw;
   sys_sem_t sem;
   
+  tcpip_adapter_init();
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
 # if 0  
   #if LWIP_STATS
@@ -66,9 +67,9 @@ void Task_lwip_init(void * pParam)
     printf("Failed creating semaphore\n");
   }
   // OLAS 
-  tcpip_init(tcpip_init_done_ok, &sem);
-  sys_sem_wait(sem);
-  sys_sem_free(sem);
+  //tcpip_init(tcpip_init_done_ok, &sem);
+  //sys_sem_wait(sem);
+  //sys_sem_free(sem);
   printf("TCP/IP initialized.\n");
   
   //add loop interface //set local loop-interface 127.0.0.1

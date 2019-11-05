@@ -201,17 +201,18 @@ int app_main(void)
     int *quemu_test=(int *)  0x3ff005f0;
 
 
+    
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
         Task_lwip_init(NULL); 
     } else {
         initialise_wifi();
-    }
+	}
 
 
-    xTaskCreate(&echo_application_thread, "echo_thread", 4096, NULL, 12, NULL);
+    xTaskCreate(&echo_application_thread, "echo_thread", 4096, NULL, 18, NULL);
     // This is not needed with the real wifi task
-    xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 12, NULL, 0);
+    xTaskCreatePinnedToCore(&telnetTask, "telnetTask", 8048, NULL, 18, NULL, 0);
 
  /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
        muxed to GPIO on reset already, but some default to other

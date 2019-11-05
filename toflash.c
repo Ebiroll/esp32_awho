@@ -55,12 +55,12 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
 
     int len_read=fread(tmp_data,sizeof(char),file_size,fbin);
 
-    //if (patch_hash==1) {
-    //  for (j=0;j<33;j++)
-    //	{
-    //      tmp_data[file_size-j]=0;
-    //	}
-    //}
+    if (patch_hash==1) {
+      for (j=0;j<33;j++)
+    	{
+          tmp_data[file_size-j]=0;
+    	}
+    }
 
     
     int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);

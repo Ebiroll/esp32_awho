@@ -622,7 +622,7 @@ int ethoc_poll(int budget)
 
 	rx_work_done = ethoc_rx(priv->netdev, budget);
 	// TODO, Dont understand the driver... This transmits again?!
-	//tx_work_done = ethoc_tx( budget);
+	tx_work_done = ethoc_tx( budget);
 
 	if (rx_work_done < budget && tx_work_done < budget) {
 		//napi_complete(napi);
@@ -724,12 +724,12 @@ void poll_task(void *pvParameter) {
     ethoc_reset(priv);
 
     for(;;) {
-	  if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE ) {
+	  //if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE ) {
          ethoc_poll(8);
-	  }
+	  //}
 	  //vTaskSuspend(NULL);
 
-      //vTaskDelay(5);
+        vTaskDelay(2);
 	  
     }
 }
@@ -772,7 +772,7 @@ int ethoc_open(struct netif *dev)
 
     // Poll for input
 	// Interrupts work now, Should not need to do polling 
-    xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, &pollHandle);
+    xTaskCreate(&poll_task,"poll_task",2048, NULL, 25, &pollHandle);
 
 
 	//if (netif_queue_stopped(dev)) {
